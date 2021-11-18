@@ -1,0 +1,9 @@
+@-webkit-keyframes rotating {
+    to {
+        -webkit-transform: rotate(1080deg);
+    }
+}
+
+.rotating {
+    -webkit-animation: rotating 1.3s ease-out infinite;
+}
