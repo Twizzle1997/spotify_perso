@@ -3,3 +3,5 @@ __pycache__/
 /static/assets/img/tmp/
 .vscode/settings.json
 .vscode
+.env
+.cache
