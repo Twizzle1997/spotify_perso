@@ -7,4 +7,4 @@ CLIENT_ID = os.getenv("client_id")
 CLIENT_SECRET = os.getenv("client_secret")
 TOKEN = os.getenv("token")
 
-DATA_PATH = "/data"
+DATA_PATH = "../data/"

@@ -1,6 +1,7 @@
 __pycache__/
 /static/assets/img/*.svg
 /static/assets/img/tmp/
+/data
 .vscode/settings.json
 .vscode
 .env
