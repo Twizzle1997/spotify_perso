@@ -15,16 +15,12 @@ class Db_connect():
         for request in requests:
             self.cursor.execute(request)
 
-    def insert_data(self, csv_file, table_name):
-        open_file = open(csv_file)
-        rows = csv.reader(open_file)
-        self.cursor.executemany("INSERT INTO {table_name} VALUES (?, ?)", rows)
+    def insert_data(self, request, csv_file):
+        open_file = open(csv_file, encoding='utf-8')
+        csv_rows = csv.reader(open_file)
+        self.cursor.executemany(request, csv_rows)
         self.connector.commit()
 
-    def get_data(self):
-        pass
+    def get_data(self, request):
+        self.cursor.execute(request)
     
- 
-    # cur.execute("SELECT * FROM data")
-    # print(cur. fetchall())
-    # 

@@ -1,4 +1,4 @@
-CREATE_PLAYLISTS = """CREATE TABLE IF NOT EXISTS playlists (
+CREATE_PLAYLIST = """CREATE TABLE IF NOT EXISTS playlist (
     id          VARCHAR(22) NOT NULL PRIMARY KEY
   ,name         VARCHAR(50) NOT NULL
   ,total_tracks INTEGER  NOT NULL
@@ -7,7 +7,7 @@ CREATE_PLAYLISTS = """CREATE TABLE IF NOT EXISTS playlists (
   ,tracks       VARCHAR(2600) NOT NULL
 );"""
 
-CREATE_TRACKS = """CREATE TABLE IF NOT EXISTS tracks(
+CREATE_TRACK_FEATURES = """CREATE TABLE IF NOT EXISTS track_features(
    id               VARCHAR(22) NOT NULL PRIMARY KEY
   ,danceability     NUMERIC(6,4) NOT NULL
   ,energy           NUMERIC(7,5) NOT NULL
@@ -23,3 +23,19 @@ CREATE_TRACKS = """CREATE TABLE IF NOT EXISTS tracks(
   ,duration_ms      INTEGER  NOT NULL
   ,time_signature   INTEGER  NOT NULL
 );"""
+
+CREATE_TRACK = """CREATE TABLE IF NOT EXISTS track(
+   id         VARCHAR(22) NOT NULL PRIMARY KEY
+  ,name       VARCHAR(255) NOT NULL
+  ,artist     VARCHAR(255) NOT NULL
+  ,album      VARCHAR(255) NOT NULL
+  ,duration   INTEGER  NOT NULL
+  ,explicit   BOOLEAN NOT NULL
+  ,popularity INTEGER  NOT NULL
+);"""
+
+INSERT_PLAYLISTS = """INSERT OR IGNORE INTO playlist(id,name,total_tracks,owner_id,href,tracks) VALUES (?,?,?,?,?,?);"""
+
+INSERT_TRACKS_FEATURES = """INSERT OR IGNORE INTO track_features(id,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,duration_ms,time_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+
+INSERT_TRACKS = """INSERT OR IGNORE INTO track(id,name,artist,album,duration,explicit,popularity) VALUES (?,?,?,?,?,?,?);"""
