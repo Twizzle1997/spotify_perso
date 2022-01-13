@@ -4,7 +4,6 @@ CREATE_PLAYLIST = """CREATE TABLE IF NOT EXISTS playlist (
   ,total_tracks INTEGER  NOT NULL
   ,owner_id     VARCHAR(25) NOT NULL
   ,href         VARCHAR(60) NOT NULL
-  ,tracks       VARCHAR(2600) NOT NULL
 );"""
 
 CREATE_TRACK_FEATURES = """CREATE TABLE IF NOT EXISTS track_features(
@@ -34,8 +33,16 @@ CREATE_TRACK = """CREATE TABLE IF NOT EXISTS track(
   ,popularity INTEGER  NOT NULL
 );"""
 
-INSERT_PLAYLISTS = """INSERT OR IGNORE INTO playlist(id,name,total_tracks,owner_id,href,tracks) VALUES (?,?,?,?,?,?);"""
+CREATE_CONTAINS = """CREATE TABLE IF NOT EXISTS contains(
+    playlist_id VARCHAR(22) NOT NULL references playlist(id),
+    track_id  VARCHAR(22) NOT NULL references track_features(id),
+    PRIMARY KEY (playlist_id, track_id)
+);"""
+
+INSERT_PLAYLISTS = """INSERT OR IGNORE INTO playlist(id,name,total_tracks,owner_id,href) VALUES (?,?,?,?,?);"""
 
 INSERT_TRACKS_FEATURES = """INSERT OR IGNORE INTO track_features(id,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,duration_ms,time_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
 
 INSERT_TRACKS = """INSERT OR IGNORE INTO track(id,name,artist,album,duration,explicit,popularity) VALUES (?,?,?,?,?,?,?);"""
+
+INSERT_CONTAINS = """INSERT OR IGNORE INTO contains(playlist_id, track_id) VALUES (?,?);"""

@@ -2,7 +2,7 @@ from io import UnsupportedOperation
 import spotipy
 import credentials as cr
 import pandas as pd
-#import ast
+import ast
 from spotipy.oauth2 import SpotifyClientCredentials
 
 class Spotify_api():
@@ -162,3 +162,19 @@ class Spotify_api():
             tracks['popularity'].append(trackJson['popularity'])
     
         return pd.DataFrame.from_dict(tracks).set_index('id')
+
+    def get_contains(self, playlist_df):
+
+        contains = {'playlist_id': [], 'track_id': []}
+
+        for i, playlist in playlist_df.iterrows():
+            for track_id in ast.literal_eval(playlist['tracks']):
+                contains['playlist_id'].append(playlist.id)
+                contains['track_id'].append(track_id)
+
+        playlist_df.drop(columns=['tracks'], inplace=True)
+        
+        return pd.DataFrame.from_dict(contains).reset_index(drop=True)
+
+        
+    
