@@ -46,3 +46,11 @@ INSERT_TRACKS_FEATURES = """INSERT OR IGNORE INTO track_features(id,danceability
 INSERT_TRACKS = """INSERT OR IGNORE INTO track(id,name,artist,album,duration,explicit,popularity) VALUES (?,?,?,?,?,?,?);"""
 
 INSERT_CONTAINS = """INSERT OR IGNORE INTO contains(playlist_id, track_id) VALUES (?,?);"""
+
+SELECT_PLAYLIST = """SELECT id, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature 
+    FROM track_features 
+    LEFT JOIN contains 
+    ON track_features.id = contains.track_id 
+    WHERE contains.playlist_id ="""
+
+GET_TRACKS = """SELECT id, title FROM track"""
