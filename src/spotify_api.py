@@ -1,5 +1,3 @@
-from io import UnsupportedOperation
-from socket import timeout
 import spotipy
 import credentials as cr
 import pandas as pd
@@ -15,7 +13,7 @@ class Spotify_api():
         self.client_secret = cr.CLIENT_SECRET
         self.auth = cr.TOKEN
 
-        self.client_credentials_manager = SpotifyClientCredentials(client_id=self.client_id, client_secret=self.client_secret, requests_timeout=None)
+        self.client_credentials_manager = SpotifyClientCredentials(client_id=self.client_id, client_secret=self.client_secret)
         self.sp = spotipy.Spotify(client_credentials_manager=self.client_credentials_manager, auth=self.auth)
         
 
@@ -55,7 +53,7 @@ class Spotify_api():
         # Create the list to initialize the dataframe
         tracks_list = []
 
-        for i, track in enumerate(playlistJson['tracks']['items']):
+        for _, track in enumerate(playlistJson['tracks']['items']):
             tracks_list.append(track['track']['id'])
 
         return tracks_list
@@ -71,7 +69,7 @@ class Spotify_api():
 
         playlists_tracks = {'id': [], 'tracks': []}
 
-        for i, playlist in playlists.T.iteritems():
+        for _, playlist in playlists.T.iteritems():
             playlists_tracks['id'].append(playlist.name)
             playlists_tracks['tracks'].append(self.get_playlist_tracks(playlist.name))
 
@@ -177,6 +175,3 @@ class Spotify_api():
         playlist_df.drop(columns=['tracks'], inplace=True)
         
         return pd.DataFrame.from_dict(contains).reset_index(drop=True)
-
-        
-    
