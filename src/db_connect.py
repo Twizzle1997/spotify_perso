@@ -24,9 +24,3 @@ class Db_connect():
 
     def get_data(self, request):
         self.cursor.execute(request)
-
-    # def get_playlist_features(self, request, id_playlist):
-    #     # self.cursor.execute(request, (id_playlist,))
-
-    #     return pd.read_sql_query(request, id_playlist)
-    

@@ -1,4 +1,5 @@
 from io import UnsupportedOperation
+from socket import timeout
 import spotipy
 import credentials as cr
 import pandas as pd
@@ -14,7 +15,7 @@ class Spotify_api():
         self.client_secret = cr.CLIENT_SECRET
         self.auth = cr.TOKEN
 
-        self.client_credentials_manager = SpotifyClientCredentials(client_id=self.client_id, client_secret=self.client_secret)
+        self.client_credentials_manager = SpotifyClientCredentials(client_id=self.client_id, client_secret=self.client_secret, requests_timeout=None)
         self.sp = spotipy.Spotify(client_credentials_manager=self.client_credentials_manager, auth=self.auth)
         
 
@@ -138,7 +139,7 @@ class Spotify_api():
     def get_tracks(self, features_dataframe):
 
         track_ids = []
-        tracks = {'id':[], 'name':[], 'artist':[], 'album':[], 'duration':[], 'explicit':[], 'popularity':[] }
+        tracks = {'id':[], 'name':[], 'artist':[], 'album':[], 'album_img':[], 'duration':[], 'explicit':[], 'popularity':[] }
 
         # Select all the tracks ids of the dataframe
         for _, track in features_dataframe.T.iteritems():
@@ -157,6 +158,7 @@ class Spotify_api():
             tracks['name'].append(trackJson['name'])
             tracks['artist'].append(list_artists)
             tracks['album'].append(trackJson['album']['name'])
+            tracks['album_img'].append(trackJson['album']['images'][1]['url'])
             tracks['duration'].append(trackJson['duration_ms'])
             tracks['explicit'].append(trackJson['explicit'])
             tracks['popularity'].append(trackJson['popularity'])
