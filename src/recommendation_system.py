@@ -99,6 +99,35 @@ class Recommendation():
 
         return keys_df.merge(track_titles, left_on='key', right_index=True).set_index('key'), track_features.loc[keys_df.key]
 
+
+    def get_recommendations_processed(self, playlist, nonplaylist, track_features, track_titles):
+
+        neighbors = NearestNeighbors(n_neighbors=5, algorithm='auto').fit(nonplaylist.values)
+
+        distances, predictions = neighbors.kneighbors(playlist.values, 3, return_distance=True) # Reshape si on vectorise la playlist
+
+        keys = {'key':[], 'distance':[], 'weight':[]}
+
+        for prediction_list, distance_list in zip(predictions, distances):
+            for prediction, distance in zip(prediction_list, distance_list):
+                index = track_features.iloc[prediction].name
+                if index not in keys['key']:
+                    keys['key'].append(index)
+                    keys['distance'].append(distance)
+                    keys['weight'].append(1)
+                else : 
+                    index_in_list = keys['key'].index(index)
+                    keys['weight'][index_in_list] += 1
+                    if distance < keys['distance'][index_in_list]: 
+                        keys['distance'][index_in_list] = distance
+
+                        # /!\ UTILISER POIDS
+
+        keys_df = pd.DataFrame.from_dict(keys).reset_index(drop=True)
+        keys_df = keys_df.sort_values(['distance'], ascending=True).head(10)
+
+        return keys_df.merge(track_titles, left_on='key', right_index=True).set_index('key'), track_features.loc[keys_df.key]
+
     def visualize_cover(self, playlist_df):
         temp = playlist_df['album_img'].values
         plt.figure(figsize=(15,int(0.625 * len(temp))) , facecolor='#8F7C7C')
