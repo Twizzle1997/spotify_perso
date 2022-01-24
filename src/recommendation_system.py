@@ -29,7 +29,7 @@ class Recommendation():
         track_features_copy['valence'].values,
         ])
 
-        #Storing the transformed column vectors into our dataframe
+        #Storing the transformed column vectors into the dataframe
         track_features_copy[['acousticness','danceability','duration_ms','energy','instrumentalness','liveness','loudness','speechiness','tempo','valence']] = scaled_features.T
 
         # #discarding the categorical and unnecessary features 
