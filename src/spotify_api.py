@@ -115,7 +115,8 @@ class Spotify_api():
         returns: dataframe of the playlist's tracks' features.
         """
 
-        features = {'id': [], 'danceability': [], 'energy': [], 'key': [], 'loudness': [], 'mode': [], 'speechiness': [], 'acousticness': [], 'instrumentalness': [], 'liveness': [], 'valence': [], 'tempo': [], 'duration_ms': [], 'time_signature': []}
+        features = {'id': [], 'danceability': [], 'energy': [], 'key': [], 'loudness': [], 'mode': [], 'speechiness': [], 'acousticness': [], 
+                    'instrumentalness': [], 'liveness': [], 'valence': [], 'tempo': [], 'duration_ms': [], 'time_signature': []}
 
         # Iter throught playlists
         for _, playlist in playlist_df.T.iteritems():
@@ -137,7 +138,7 @@ class Spotify_api():
     def get_tracks(self, features_dataframe):
 
         track_ids = []
-        tracks = {'id':[], 'name':[], 'artist':[], 'album':[], 'album_img':[], 'duration':[], 'explicit':[], 'popularity':[] }
+        tracks = {'id':[], 'name':[], 'artist':[], 'year':[], 'album':[], 'album_img':[], 'duration':[], 'explicit':[], 'popularity':[] }
 
         # Select all the tracks ids of the dataframe
         for _, track in features_dataframe.T.iteritems():
@@ -155,6 +156,7 @@ class Spotify_api():
             tracks['id'].append(trackJson['id'])
             tracks['name'].append(trackJson['name'])
             tracks['artist'].append(list_artists)
+            tracks['year'].append(trackJson['album']['release_date'][:4])
             tracks['album'].append(trackJson['album']['name'])
             tracks['album_img'].append(trackJson['album']['images'][1]['url'])
             tracks['duration'].append(trackJson['duration_ms'])

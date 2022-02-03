@@ -12,9 +12,9 @@ class Recommendation():
     def process_data(self, track_features):
         track_features_copy = track_features.copy()
 
-        mode_OHE = pd.get_dummies(track_features_copy['mode'], prefix="mode")
-        key_OHE = pd.get_dummies(track_features_copy['key'], prefix="key")
-        time_signature_OHE = pd.get_dummies(track_features_copy['time_signature'], prefix="time_signature")
+        mode_dum = pd.get_dummies(track_features_copy['mode'], prefix="mode")
+        key_dum = pd.get_dummies(track_features_copy['key'], prefix="key")
+        time_signature_dum = pd.get_dummies(track_features_copy['time_signature'], prefix="time_signature")
 
         scaled_features = MinMaxScaler().fit_transform([
         track_features_copy['acousticness'].values,
@@ -38,9 +38,9 @@ class Recommendation():
         track_features_copy = track_features_copy.drop('time_signature', axis = 1)
 
         #Appending the OHE columns of the categorical features
-        track_features_copy = track_features_copy.join(mode_OHE)
-        track_features_copy = track_features_copy.join(key_OHE)
-        track_features_copy = track_features_copy.join(time_signature_OHE)
+        track_features_copy = track_features_copy.join(mode_dum)
+        track_features_copy = track_features_copy.join(key_dum)
+        track_features_copy = track_features_copy.join(time_signature_dum)
 
         track_features_copy.head()
 
@@ -73,9 +73,9 @@ class Recommendation():
 
     def get_recommendations(self, playlist, nonplaylist, track_features, track_titles):
 
-        neighbors = NearestNeighbors(n_neighbors=5, algorithm='kd_tree').fit(nonplaylist)
+        neighbors = NearestNeighbors(n_neighbors=5, algorithm='auto').fit(nonplaylist)
 
-        distances, predictions = neighbors.kneighbors(playlist, 3, return_distance=True)
+        distances, predictions = neighbors.kneighbors(playlist, 5, return_distance=True)
 
         keys = {'key':[], 'distance':[], 'weight':[]}
 
@@ -95,7 +95,7 @@ class Recommendation():
                         # /!\ UTILISER POIDS
 
         keys_df = pd.DataFrame.from_dict(keys).reset_index(drop=True)
-        keys_df = keys_df.sort_values(['distance'], ascending=True).head(10)
+        keys_df = keys_df.sort_values(['weight', 'distance'], ascending=[False, True]).head(10)
 
         return keys_df.merge(track_titles, left_on='key', right_index=True).set_index('key'), track_features.loc[keys_df.key]
 
@@ -121,10 +121,8 @@ class Recommendation():
                     if distance < keys['distance'][index_in_list]: 
                         keys['distance'][index_in_list] = distance
 
-                        # /!\ UTILISER POIDS
-
         keys_df = pd.DataFrame.from_dict(keys).reset_index(drop=True)
-        keys_df = keys_df.sort_values(['distance'], ascending=True).head(10)
+        keys_df = keys_df.sort_values(['weight', 'distance'], ascending=[False, True]).head(10)
 
         return keys_df.merge(track_titles, left_on='key', right_index=True).set_index('key'), track_features.loc[keys_df.key]
 
