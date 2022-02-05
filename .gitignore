@@ -2,9 +2,9 @@ __pycache__/
 /static/assets/img/*.svg
 /static/assets/img/tmp/
 /data
+*/mlruns
 .vscode/settings.json
 .vscode
 .env
 .cache
 todo.txt
-/src/mlruns
