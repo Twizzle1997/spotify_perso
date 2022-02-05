@@ -1,9 +1,11 @@
+from email import header
 from sklearn.metrics.pairwise import cosine_similarity
 # from sklearn.preprocessing import MinMaxScaler
 # from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn import metrics
 from skimage import io
 import numpy as np
@@ -217,4 +219,79 @@ class Recommendation():
 
         # add results to the database
         recommendation['playlist'] = playlist_id
-        recommendation[['proba', 'playlist']].to_csv(data_path + 'recommendations.csv', encoding='utf-8')
+        recommendation[['proba', 'playlist']].to_csv(data_path + 'recommendations.csv', encoding='utf-8', header=False)
+
+        db.init_connection()
+        db.create_tables([rq.CREATE_RECOMMENDATION])
+        db.insert_data(rq.INSERT_RECOMMENDATION, data_path + 'recommendations.csv')
+        db.close_connection()
+
+    def knnRecommandation_best_params(self, playlist_id):
+
+        params = { 
+            'algorithm': ['ball_tree', 'kd_tree', 'brute'],
+            'weights': ['uniform', 'distance'],
+            'metric': ['euclidean', 'manhattan', 'chebyshev', 'minkowski', 'wminkowski', 'seuclidean', 'mahalanobis'],
+            'n_neighbors': list(range(1, 10)) 
+            }
+
+        # get datas
+        db.init_connection()
+        playlist_titles = pd.read_sql_query(rq.SELECT_PLAYLIST_TITLES + '"' + playlist_id + '"', db.connector).set_index('id')
+        track_titles = pd.read_sql_query(rq.SELECT_TRACKS_TITLES, db.connector).set_index('id')
+        track_features = pd.read_sql_query(rq.SELECT_TRACKS_FEATURES, db.connector).set_index('id')
+        db.close_connection()
+
+        # process datas and generate train / test sets
+        track_features_processed = self.process_data(track_features)
+        _, nonplaylist = self.generate_playlist_nonplaylist(track_features_processed, playlist_titles)
+
+        train_test_dataset = track_features_processed.copy()
+        train_test_dataset['playlist'] = train_test_dataset.apply(lambda x: int(x.name in playlist_titles.index), axis=1)
+
+        classifier_data = train_test_dataset.copy()
+        classifier_data = classifier_data.sort_values(['playlist'], ascending=False).head(len(playlist_titles)*4)
+
+        classifier_target = classifier_data['playlist']
+
+        classifier_data = classifier_data.drop('playlist', axis = 1)
+
+        X_train, X_test, y_train, y_test = train_test_split(classifier_data, classifier_target, test_size=0.3, random_state=42)
+
+        # RandomizedSearchCV
+        RSCV = RandomizedSearchCV(KNeighborsClassifier(), params, random_state=42)
+        RSCV.fit(X_train, y_train)
+
+        # generate model
+        knn = KNeighborsClassifier(**RSCV.best_params_)
+        knn.fit(X_train, y_train)
+
+        y_pred = knn.predict(X_test)
+
+        print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+
+        # get recommandations
+        recommendation = nonplaylist.copy()
+
+        recommendation['predict'] = recommendation.apply(lambda x: knn.predict([x])[0], axis=1)
+        recommendation['proba'] = recommendation.loc[:, recommendation.columns != 'predict'].apply(lambda x: knn.predict_proba([x])[0].max(), axis=1)
+
+        recommendation = recommendation[recommendation['predict']==1]
+        recommendation = recommendation.sort_values('proba', ascending=False).head(10)
+
+        recommendation = recommendation.merge(track_titles, left_index=True, right_index=True)
+
+        # vizualise recommandations
+        print('Parameters found : ', RSCV.best_params_)
+        self.visualize_cover(recommendation)
+        recommendation = recommendation[['name', 'proba']]
+        display(recommendation)
+
+        # add results to the database
+        recommendation['playlist'] = playlist_id
+        recommendation[['proba', 'playlist']].to_csv(data_path + 'recommendations.csv', encoding='utf-8', header=False)
+
+        db.init_connection()
+        db.create_tables([rq.CREATE_RECOMMENDATION])
+        db.insert_data(rq.INSERT_RECOMMENDATION, data_path + 'recommendations.csv')
+        db.close_connection()
