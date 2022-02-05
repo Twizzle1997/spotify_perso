@@ -231,7 +231,7 @@ class Recommendation():
         params = { 
             'algorithm': ['ball_tree', 'kd_tree', 'brute'],
             'weights': ['uniform', 'distance'],
-            'metric': ['euclidean', 'manhattan', 'chebyshev', 'minkowski', 'wminkowski', 'seuclidean', 'mahalanobis'],
+            'metric': ['euclidean', 'manhattan', 'chebyshev', 'minkowski', 'wminkowski', 'seuclidean', 'mahalanobis', 'cosine', 'jaccard'],
             'n_neighbors': list(range(1, 10)) 
             }
 
