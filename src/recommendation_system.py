@@ -1,46 +1,67 @@
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.feature_extraction.text import TfidfVectorizer
+# from sklearn.preprocessing import MinMaxScaler
+# from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
 from skimage import io
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import credentials as cr
+import SQL_requests as rq
+from db_connect import Db_connect
+
+db = Db_connect()
+data_path = cr.DATA_PATH
 
 class Recommendation():
 
     def process_data(self, track_features):
         track_features_copy = track_features.copy()
 
+        # Delete the unit digit of the year to get decades
+        track_features_copy['decade'] = track_features_copy['year'].apply(lambda x: str(x)[:3])
+
+        # Change duration into minutes
+        track_features_copy['duration_min'] = track_features_copy['duration_ms'].apply(lambda x: x/60000)
+
         mode_dum = pd.get_dummies(track_features_copy['mode'], prefix="mode")
         key_dum = pd.get_dummies(track_features_copy['key'], prefix="key")
         time_signature_dum = pd.get_dummies(track_features_copy['time_signature'], prefix="time_signature")
+        year_dum = pd.get_dummies(track_features_copy['decade'], prefix="decade")
 
-        scaled_features = MinMaxScaler().fit_transform([
-        track_features_copy['acousticness'].values,
-        track_features_copy['danceability'].values,
-        track_features_copy['duration_ms'].values,
-        track_features_copy['energy'].values,
-        track_features_copy['instrumentalness'].values,
-        track_features_copy['liveness'].values,
-        track_features_copy['loudness'].values,
-        track_features_copy['speechiness'].values,
-        track_features_copy['tempo'].values,
-        track_features_copy['valence'].values,
-        ])
+        # scaled_features = MinMaxScaler(feature_range=(0, 10)).fit_transform([
+        # track_features_copy['acousticness'].values,
+        # track_features_copy['danceability'].values,
+        # track_features_copy['duration_min'].values,
+        # track_features_copy['energy'].values,
+        # track_features_copy['instrumentalness'].values,
+        # track_features_copy['liveness'].values,
+        # track_features_copy['speechiness'].values,
+        # track_features_copy['tempo'].values,
+        # track_features_copy['valence'].values,
+        # track_features_copy['loudness'].values
+        # ])
 
-        #Storing the transformed column vectors into the dataframe
-        track_features_copy[['acousticness','danceability','duration_ms','energy','instrumentalness','liveness','loudness','speechiness','tempo','valence']] = scaled_features.T
+        # track_features_copy[['acousticness','danceability','duration_min','energy','instrumentalness','liveness',
+        # 'speechiness','tempo','valence', 'loudness']] = scaled_features.T
 
-        # #discarding the categorical and unnecessary features 
+        # discarding the categorical and unnecessary features 
         track_features_copy = track_features_copy.drop('key',axis = 1)
         track_features_copy = track_features_copy.drop('mode', axis = 1)
         track_features_copy = track_features_copy.drop('time_signature', axis = 1)
+        track_features_copy = track_features_copy.drop('year', axis = 1)
+        track_features_copy = track_features_copy.drop('decade', axis = 1)
+        track_features_copy = track_features_copy.drop('duration_ms', axis = 1)
 
-        #Appending the OHE columns of the categorical features
+
+        # Appending the dum columns of the categorical features
         track_features_copy = track_features_copy.join(mode_dum)
         track_features_copy = track_features_copy.join(key_dum)
         track_features_copy = track_features_copy.join(time_signature_dum)
+        track_features_copy = track_features_copy.join(year_dum)
 
         track_features_copy.head()
 
@@ -144,3 +165,56 @@ class Recommendation():
             plt.subplots_adjust(wspace=None, hspace=None)
 
         plt.show()
+
+    def knnRecommandation(self, playlist_id):
+
+        # get datas
+        db.init_connection()
+        playlist_titles = pd.read_sql_query(rq.SELECT_PLAYLIST_TITLES + playlist_id, db.connector).set_index('id')
+        track_titles = pd.read_sql_query(rq.SELECT_TRACKS_TITLES, db.connector).set_index('id')
+        track_features = pd.read_sql_query(rq.SELECT_TRACKS_FEATURES, db.connector).set_index('id')
+        db.close_connection()
+
+        # process datas and generate train / test sets
+        track_features_processed = self.process_data(track_features)
+        playlist, nonplaylist = self.generate_playlist_nonplaylist(track_features_processed, playlist_titles)
+
+        train_test_dataset = track_features_processed.copy()
+        train_test_dataset['playlist'] = train_test_dataset.apply(lambda x: int(x.name in playlist_titles.index), axis=1)
+
+        classifier_data = train_test_dataset.copy()
+        classifier_data = classifier_data.sort_values(['playlist'], ascending=False).head(100)
+
+        classifier_target = classifier_data['playlist']
+
+        classifier_data = classifier_data.drop('playlist',axis = 1)
+
+        X_train, X_test, y_train, y_test = train_test_split(classifier_data, classifier_target, test_size=0.3, random_state=42)
+
+        # generate model
+        knn = KNeighborsClassifier(n_neighbors=5, algorithm='brute', weights='distance', metric='manhattan')
+        knn.fit(X_train, y_train)
+
+        y_pred = knn.predict(X_test)
+
+        print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+
+        # get recommandations
+        recommendation = nonplaylist.copy()
+
+        recommendation['predict'] = recommendation.apply(lambda x: knn.predict([x])[0], axis=1)
+        recommendation['proba'] = recommendation.loc[:, recommendation.columns != 'predict'].apply(lambda x: knn.predict_proba([x])[0].max(), axis=1)
+
+        recommendation = recommendation[recommendation['predict']==1]
+        recommendation = recommendation.sort_values('proba', ascending=False).head(10)
+
+        recommendation = recommendation.merge(track_titles, left_index=True, right_index=True)
+
+        # vizualise recommandations
+        self.visualize_cover(recommendation)
+        recommendation = recommendation[['name', 'proba']]
+        display(recommendation)
+
+        # add results to the database
+        recommendation['playlist'] = playlist_id
+        recommendation[['proba', 'playlist']].to_csv(data_path + 'recommendations.csv', encoding='utf-8')

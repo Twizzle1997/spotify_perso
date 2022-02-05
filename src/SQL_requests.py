@@ -41,13 +41,23 @@ CREATE_CONTAINS = """CREATE TABLE IF NOT EXISTS contains(
     PRIMARY KEY (playlist_id, track_id)
 );"""
 
+CREATE_RECOMMENDATION = """CREATE TABLE IF NOT EXISTS recommendation(
+    id_playlist VARCHAR(22) NOT NULL references playlist(id),
+    id_track    VARCHAR(22) NOT NULL references track_features(id),
+    score       NUMERIC NOT NULL,
+    PRIMARY KEY (id_playlist, id_track)
+);"""
+
 INSERT_PLAYLISTS = """INSERT OR IGNORE INTO playlist(id,name,total_tracks,owner_id,href) VALUES (?,?,?,?,?);"""
 
-INSERT_TRACKS_FEATURES = """INSERT OR IGNORE INTO track_features(id,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,duration_ms,time_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+INSERT_TRACKS_FEATURES = """INSERT OR IGNORE INTO track_features(id,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,
+liveness,valence,tempo,duration_ms,time_signature) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
 
 INSERT_TRACKS = """INSERT OR IGNORE INTO track(id,name,artist,year,album,album_img,duration,explicit,popularity) VALUES (?,?,?,?,?,?,?,?,?);"""
 
 INSERT_CONTAINS = """INSERT OR IGNORE INTO contains(playlist_id, track_id) VALUES (?,?);"""
+
+INSERT_RECOMMENDATION = """INSERT OR IGNORE INTO recommendation(id_track,score,id_playlist) VALUES (?,?,?);"""
 
 SELECT_PLAYLIST = """SELECT id, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_ms, time_signature 
     FROM track_features 
@@ -59,4 +69,5 @@ SELECT_PLAYLIST_TITLES = """SELECT id, name, album_img FROM track LEFT JOIN cont
 
 SELECT_TRACKS_TITLES = """SELECT id, name, album_img FROM track"""
 
-SELECT_TRACKS_FEATURES = """SELECT * FROM track_features"""
+# SELECT_TRACKS_FEATURES = """SELECT * FROM track_features"""
+SELECT_TRACKS_FEATURES = """SELECT track_features.*, track.year FROM track_features INNER JOIN track ON track_features.id = track.id"""
