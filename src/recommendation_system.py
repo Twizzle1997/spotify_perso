@@ -34,21 +34,21 @@ class Recommendation():
         time_signature_dum = pd.get_dummies(track_features_copy['time_signature'], prefix="time_signature")
         year_dum = pd.get_dummies(track_features_copy['decade'], prefix="decade")
 
-        scaled_features = MinMaxScaler(feature_range=(0, 10)).fit_transform([
-        track_features_copy['acousticness'].values,
-        track_features_copy['danceability'].values,
-        track_features_copy['duration_min'].values,
-        track_features_copy['energy'].values,
-        track_features_copy['instrumentalness'].values,
-        track_features_copy['liveness'].values,
-        track_features_copy['speechiness'].values,
-        track_features_copy['tempo'].values,
-        track_features_copy['valence'].values,
-        track_features_copy['loudness'].values
-        ])
+        # scaled_features = MinMaxScaler(feature_range=(0, 10)).fit_transform([
+        # track_features_copy['acousticness'].values,
+        # track_features_copy['danceability'].values,
+        # track_features_copy['duration_min'].values,
+        # track_features_copy['energy'].values,
+        # track_features_copy['instrumentalness'].values,
+        # track_features_copy['liveness'].values,
+        # track_features_copy['speechiness'].values,
+        # track_features_copy['tempo'].values,
+        # track_features_copy['valence'].values,
+        # track_features_copy['loudness'].values
+        # ])
 
-        track_features_copy[['acousticness','danceability','duration_min','energy','instrumentalness','liveness',
-        'speechiness','tempo','valence', 'loudness']] = scaled_features.T
+        # track_features_copy[['acousticness','danceability','duration_min','energy','instrumentalness','liveness',
+        # 'speechiness','tempo','valence', 'loudness']] = scaled_features.T
 
         # discarding the categorical and unnecessary features 
         track_features_copy = track_features_copy.drop('key',axis = 1)
