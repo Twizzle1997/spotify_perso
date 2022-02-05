@@ -26,6 +26,13 @@ Install the requirements :
   ```sh 
   pip install -r requirements.txt
   ```
+
+## Project structure
+`db_connect.py` database connection and communication methods  
+`spotify_api.py` utilizations of the spotify api endpoints to get datas  
+`recommendation_system.py` methods used to get the recommendations  
+`SQL_requests.py` SQL scripts to create tables, insert and select datas  
+`credentials.py` project credentials
     
 ## Get your recommendations
 - Run [src/notebook.ipynb](https://github.com/Twizzle1997/spotify_perso/blob/master/src/notebook.ipynb) to get your personal spotify datas from the API and create the database.   
